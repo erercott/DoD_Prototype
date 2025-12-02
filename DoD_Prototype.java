@@ -6,6 +6,7 @@ import java.awt.geom.AffineTransform;
 public class DoD_Prototype extends JPanel implements KeyListener {
 
     private int orientation = 0; // 0=right, 1=down, 2=left, 3=up
+	private boolean inputLocked = false; 
 	
 	private boolean flickerActive = false; 
 	private long flickerStartTime;
@@ -25,6 +26,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 			
 		if(elapsed >= 500){
 			flickerActive = false; 
+			inputLocked = false;
 		} else {
 			drawTriangle = (elapsed / flickerInterval) % 2 == 0; 
 			}
@@ -65,6 +67,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+		if (inputLocked) return;
         switch (e.getKeyCode()) {
             case KeyEvent.VK_RIGHT:
                 rotateRight();
@@ -79,6 +82,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     }
 	private void startFlicker(){
 		flickerActive = true;
+		inputLocked = true; 
 		flickerStartTime = System.currentTimeMillis();
 		repaint(); 
 	}
