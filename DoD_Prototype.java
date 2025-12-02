@@ -5,7 +5,7 @@ import java.awt.geom.AffineTransform;
 
 public class DoD_Prototype extends JPanel implements KeyListener {
 
-    private int orientation = 0; // 0=right, 1=down, 2=left, 3=up
+    private int orientation = 3; // 0=right, 1=down, 2=left, 3=up
 	private boolean inputLocked = false; 
 	private Color triangleColor = Color.RED; 
 	
