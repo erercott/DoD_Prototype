@@ -7,6 +7,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
     private int orientation = 0; // 0=right, 1=down, 2=left, 3=up
 	private boolean inputLocked = false; 
+	private Color triangleColor = Color.RED; 
 	
 	private boolean flickerActive = false; 
 	private long flickerStartTime;
@@ -38,6 +39,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 			int size = 50;
 			int[] xPoints = {0, -size, -size};
 			int[] yPoints = {0, -size, size};
+			g2d.setColor(triangleColor);
 			g2d.fillPolygon(xPoints, yPoints,3);
 			g2d.setTransform(old);
 			}
@@ -78,6 +80,13 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 			case KeyEvent.VK_DOWN:
 				startFlicker();
 				break;
+			case KeyEvent.VK_UP:
+			if(!inputLocked){
+				if(triangleColor == Color.RED) triangleColor = Color.GREEN;
+				else if(triangleColor == Color.GREEN) triangleColor = Color.BLUE;
+				else triangleColor = Color.RED;
+				repaint();
+			}
         }
     }
 	private void startFlicker(){
