@@ -54,6 +54,20 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             g2d.fillPolygon(xPoints, yPoints,3);
             g2d.setTransform(old);
         }
+		int inset = 40; 
+		int thickness =5; 
+		g2d.setColor(new Color(0,180,255));
+		Stroke oldStroke = g2d.getStroke();
+		g2d.setStroke(new BasicStroke(thickness));
+		
+		int bottomInset = 150;
+		g2d.drawRect(
+		inset, 
+		inset,
+		getWidth() - inset * 2,
+		getHeight() - bottomInset - inset
+		);
+		g2d.setStroke(oldStroke);
     }
 
     private void rotateRight() {
@@ -117,7 +131,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         JFrame frame = new JFrame("DoD Prototype");
         DoD_Prototype panel = new DoD_Prototype();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(640, 600);
+
 		frame.setSize(1226, 733);
         frame.add(panel);
         frame.setVisible(true);
