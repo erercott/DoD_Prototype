@@ -117,7 +117,8 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         JFrame frame = new JFrame("DoD Prototype");
         DoD_Prototype panel = new DoD_Prototype();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(640, 600); // slightly wider for retro feel
+        frame.setSize(640, 600);
+		frame.setSize(1226, 733);
         frame.add(panel);
         frame.setVisible(true);
         panel.requestFocusInWindow();
