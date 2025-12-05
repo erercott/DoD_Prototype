@@ -1,0 +1,7 @@
+# Windows system files
+desktop.ini
+Thumbs.db
+
+# Common folders/files to ignore
+*.log
+*.tmp
