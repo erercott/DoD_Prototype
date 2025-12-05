@@ -7,7 +7,6 @@ import java.awt.geom.AffineTransform;
 public class DoD_Prototype extends JPanel implements KeyListener {
 
     private ArrayList<EnemyOrb> enemyOrbs;
-
     private int orientation = 0;
     private boolean inputLocked = false;
     private Color triangleColor = Color.RED;
@@ -27,6 +26,18 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
         enemyOrbs = new ArrayList<>();
 
+        // Spawn orbs after panel is displayed (so getWidth/getHeight are valid)
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                spawnOrbs();
+            }
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                if (enemyOrbs.isEmpty()) {
+                    spawnOrbs();
+                }
+            }
+        });
+
         new javax.swing.Timer(16, e -> repaint()).start();
     }
 
@@ -35,51 +46,32 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        // --- Arena placement ---
+        // Outer HUD border
+        int inset = 40;
+        int bottomInset = 150;
+        int thickness = 5;
+        Stroke oldStroke = g2d.getStroke();
+        g2d.setStroke(new BasicStroke(thickness));
+        g2d.setColor(new Color(0, 180, 255));
+        g2d.drawRect(inset, inset, getWidth() - inset * 2, getHeight() - bottomInset - inset);
+        g2d.setStroke(oldStroke);
+
+        // Arena
         int arenaX = getWidth() / 2 - arenaSize / 2;
         int arenaY = getHeight() - arenaSize - arenaBottomMargin;
 
-        // Draw arena box
         g2d.setColor(Color.LIGHT_GRAY);
         g2d.drawRect(arenaX, arenaY, arenaSize, arenaSize);
 
-        // --- Dynamic ORB placement (always correct size/spacing) ---
-        enemyOrbs.clear();
-        int numOrbs = 3;
-		int orbSize = 50; 
-		
-		int inset = 40;
-        int thickness = 5;
-        int bottomInset = 150;
-		int bigX = inset;
-		int bigY = inset;
-		int bigW = getWidth() - inset * 2;
-		int bigH = getHeight() - bottomInset - inset;	
-		
-        int slotWidth = bigW / numOrbs;
-
-        for (int i = 0; i < numOrbs; i++) {
-            int slotStartX = bigX + i * slotWidth;
-            int orbX = slotStartX + slotWidth / 2 - orbSize / 2; 
-            int orbY = bigY + bigH / 2 - orbSize / 2;
-
-            Color orbColor = (i == 0 ? Color.RED :
-                             (i == 1 ? Color.GREEN : Color.BLUE));
-
-            enemyOrbs.add(new EnemyOrb(orbX, orbY, orbSize, orbColor, i));
-        }
-
-        // Draw all orbs
+        // Draw orbs
         for (EnemyOrb orb : enemyOrbs) {
             orb.draw(g2d);
         }
 
-        // --- TRIANGLE inside Arena ---
+        // Draw central triangle
         boolean drawTriangle = true;
-
         if (flickerActive) {
             long elapsed = System.currentTimeMillis() - flickerStartTime;
-
             if (elapsed >= 500) {
                 flickerActive = false;
                 inputLocked = false;
@@ -90,7 +82,6 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
         if (drawTriangle) {
             AffineTransform old = g2d.getTransform();
-
             g2d.translate(getWidth() / 2, arenaY + arenaSize / 2);
             g2d.rotate(Math.toRadians(orientation * 90));
 
@@ -101,19 +92,33 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             g2d.fillPolygon(xPoints, yPoints, 3);
             g2d.setTransform(old);
         }
+    }
 
-        // Outer HUD border
-       
+    private void spawnOrbs() {
+        enemyOrbs.clear();
+        int numOrbs = 1 + (int)(Math.random() * 3); // 1-3 orbs
+        int orbSize = 50;
 
-        g2d.setColor(new Color(0, 180, 255));
-        Stroke oldStroke = g2d.getStroke();
-        g2d.setStroke(new BasicStroke(thickness));
+        int inset = 40;
+        int bottomInset = 150;
+        int bigX = inset;
+        int bigY = inset;
+        int bigW = getWidth() - inset * 2;
+        int bigH = getHeight() - bottomInset - inset;
 
-        g2d.drawRect(inset, inset,
-                getWidth() - inset * 2,
-                getHeight() - bottomInset - inset);
+        int slotWidth = bigW / numOrbs;
+        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
 
-        g2d.setStroke(oldStroke);
+        for (int i = 0; i < numOrbs; i++) {
+            int slotStartX = bigX + i * slotWidth;
+            int orbX = slotStartX + slotWidth / 2 - orbSize / 2;
+            int orbY = bigY + bigH / 2 - orbSize / 2;
+
+            int orbOrientation = (int)(Math.random() * 4); // 0-3 for triangle orientation
+            Color orbColor = colors[i % colors.length]; // cycles through colors
+
+            enemyOrbs.add(new EnemyOrb(orbX, orbY, orbSize, orbColor, orbOrientation));
+        }
     }
 
     private void rotateRight() {
