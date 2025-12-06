@@ -170,4 +170,8 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         frame.setVisible(true);
         panel.requestFocusInWindow();
     }
+	
+	private void clearMatchingEnemies() {
+		enemyOrbs.removeIf(orb -> orb.matchesPlayer(orientation, triangleColor));
+	}
 }
