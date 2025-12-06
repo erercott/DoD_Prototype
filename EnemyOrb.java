@@ -11,6 +11,11 @@ public class EnemyOrb {
         this.size = size;
         this.triangleColor = triangleColor;
         this.orientation = orientation;
+		
+		}
+		
+	public boolean matchesPlayer(int playerOrientation, Color playerColor) {
+		return this.orientation == playerOrientation && this.triangleColor.equals(playerColor);
     }
 
     public void draw(Graphics2D g2d) {
