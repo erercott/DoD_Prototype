@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 
 public class EnemyOrb {
     int x, y, size;
@@ -20,19 +21,25 @@ public class EnemyOrb {
 
     public void draw(Graphics2D g2d) {
         // Outline circle
-        g2d.setColor(Color.BLACK);
-        g2d.setStroke(new BasicStroke(3));
-        g2d.drawOval(x, y, size, size);
-
-        // Triangle inside orb
-        int cx = x + size / 2;
-        int cy = y + size / 2;
-        int s = size / 3;
-
-        int[] xPoints = {cx, cx - s, cx - s};
-        int[] yPoints = {cy, cy - s, cy + s};
-
-        g2d.setColor(triangleColor);
-        g2d.fillPolygon(xPoints, yPoints, 3);
-    }
+		int cx = x + size / 2;
+		int cy = y + size / 2;
+		int s = size / 3;
+		
+        int[] xPoints = {0, -s, -s};
+        int[] yPoints = {0, -s, s};
+		
+		AffineTransform old = g2d.getTransform();
+		
+		g2d.translate(cx, cy);
+		g2d.rotate(Math.toRadians(orientation * 90));
+		
+		g2d.setColor(triangleColor);
+		g2d.fillPolygon(xPoints, yPoints, 3);
+		
+		g2d.setTransform(old);
+    // Draw orb outline
+    g2d.setColor(Color.BLACK);
+    g2d.setStroke(new BasicStroke(3));
+    g2d.drawOval(x, y, size, size);
+	}
 }

@@ -10,8 +10,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private int orientation = 0;
     private boolean inputLocked = false;
     private Color triangleColor = Color.RED;
-    private boolean flickerActive = false;
-    private long flickerStartTime;
+    private boolean flickerVisible = true;
     private int flickerInterval = 30;
 
     // Arena parameters
@@ -26,16 +25,10 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
         enemyOrbs = new ArrayList<>();
 
-        // Spawn orbs after panel is displayed (so getWidth/getHeight are valid)
+        // Spawn orbs after panel is displayed
         addComponentListener(new java.awt.event.ComponentAdapter() {
-            public void componentShown(java.awt.event.ComponentEvent e) {
-                spawnOrbs();
-            }
-            public void componentResized(java.awt.event.ComponentEvent e) {
-                if (enemyOrbs.isEmpty()) {
-                    spawnOrbs();
-                }
-            }
+            public void componentShown(java.awt.event.ComponentEvent e) { spawnOrbs(); }
+            public void componentResized(java.awt.event.ComponentEvent e) { if (enemyOrbs.isEmpty()) spawnOrbs(); }
         });
 
         new javax.swing.Timer(16, e -> repaint()).start();
@@ -59,28 +52,14 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         // Arena
         int arenaX = getWidth() / 2 - arenaSize / 2;
         int arenaY = getHeight() - arenaSize - arenaBottomMargin;
-
         g2d.setColor(Color.LIGHT_GRAY);
         g2d.drawRect(arenaX, arenaY, arenaSize, arenaSize);
 
-        // Draw orbs
-        for (EnemyOrb orb : enemyOrbs) {
-            orb.draw(g2d);
-        }
+        // Draw enemy orbs
+        for (EnemyOrb orb : enemyOrbs) orb.draw(g2d);
 
-        // Draw central triangle
-        boolean drawTriangle = true;
-        if (flickerActive) {
-            long elapsed = System.currentTimeMillis() - flickerStartTime;
-            if (elapsed >= 500) {
-                flickerActive = false;
-                inputLocked = false;
-            } else {
-                drawTriangle = (elapsed / flickerInterval) % 2 == 0;
-            }
-        }
-
-        if (drawTriangle) {
+        // Draw central triangle if visible
+        if (flickerVisible) {
             AffineTransform old = g2d.getTransform();
             g2d.translate(getWidth() / 2, arenaY + arenaSize / 2);
             g2d.rotate(Math.toRadians(orientation * 90));
@@ -99,84 +78,81 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         int numOrbs = 1 + (int)(Math.random() * 3); // 1-3 orbs
         int orbSize = 50;
 
-        int inset = 40;
-        int bottomInset = 150;
-        int bigX = inset;
-        int bigY = inset;
-        int bigW = getWidth() - inset * 2;
-        int bigH = getHeight() - bottomInset - inset;
-
+        int inset = 40, bottomInset = 150;
+        int bigX = inset, bigY = inset;
+        int bigW = getWidth() - inset * 2, bigH = getHeight() - bottomInset - inset;
         int slotWidth = bigW / numOrbs;
         Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
 
         for (int i = 0; i < numOrbs; i++) {
-            int slotStartX = bigX + i * slotWidth;
-            int orbX = slotStartX + slotWidth / 2 - orbSize / 2;
+            int orbX = bigX + i * slotWidth + slotWidth / 2 - orbSize / 2;
             int orbY = bigY + bigH / 2 - orbSize / 2;
-
-            int orbOrientation = (int)(Math.random() * 4); // 0-3 for triangle orientation
-            Color orbColor = colors[i % colors.length]; // cycles through colors
-
+            int orbOrientation = (int)(Math.random() * 4);
+            Color orbColor = colors[i % colors.length];
             enemyOrbs.add(new EnemyOrb(orbX, orbY, orbSize, orbColor, orbOrientation));
         }
     }
 
-    private void rotateRight() {
-        orientation = (orientation + 1) % 4;
-        repaint();
-    }
+    private void rotateRight() { orientation = (orientation + 1) % 4; repaint(); }
+    private void rotateLeft() { orientation = (orientation + 3) % 4; repaint(); }
 
-    private void rotateLeft() {
-        orientation = (orientation + 3) % 4;
-        repaint();
-    }
-
-    private void startFlicker() {
-        flickerActive = true;
+    private void startFlicker(Runnable afterFlicker) {
+        flickerVisible = true;
         inputLocked = true;
-        flickerStartTime = System.currentTimeMillis();
-        repaint();
-    }
+        long startTime = System.currentTimeMillis();
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if (inputLocked) return;
+        new javax.swing.Timer(16, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                long elapsed = System.currentTimeMillis() - startTime;
+                flickerVisible = (elapsed / flickerInterval % 2 == 0); // toggle visibility
+                repaint();
 
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_RIGHT -> rotateRight();
-            case KeyEvent.VK_LEFT -> rotateLeft();
-            case KeyEvent.VK_DOWN -> {
-				if (!inputLocked) {
-					clearMatchingEnemies();
-					startFlicker();
-				}
-			}
-            case KeyEvent.VK_UP -> {
-                if (!inputLocked) {
-                    if (triangleColor == Color.RED) triangleColor = Color.GREEN;
-                    else if (triangleColor == Color.GREEN) triangleColor = Color.BLUE;
-                    else triangleColor = Color.RED;
-                    repaint();
+                if (elapsed >= 500) { // stop after 500ms
+                    flickerVisible = true;
+                    inputLocked = false;
+                    ((Timer) e.getSource()).stop();
+                    if (afterFlicker != null) afterFlicker.run();
                 }
             }
+        }).start();
+    }
+
+  @Override
+public void keyPressed(KeyEvent e) {
+    if (inputLocked) return;
+
+    switch (e.getKeyCode()) {
+        case KeyEvent.VK_RIGHT -> rotateRight();
+        case KeyEvent.VK_LEFT -> rotateLeft();
+        case KeyEvent.VK_DOWN -> {
+            clearMatchingEnemies();
+            startFlicker(this::spawnOrbs);
+        }
+        case KeyEvent.VK_UP -> {
+            if (triangleColor.equals(Color.RED)) triangleColor = Color.GREEN;
+            else if (triangleColor.equals(Color.GREEN)) triangleColor = Color.BLUE;
+            else triangleColor = Color.RED;
+            repaint();
         }
     }
+}
+
 
     @Override public void keyReleased(KeyEvent e) {}
     @Override public void keyTyped(KeyEvent e) {}
 
+    private void clearMatchingEnemies() {
+        enemyOrbs.removeIf(orb -> orb.matchesPlayer(orientation, triangleColor));
+    }
+
     public static void main(String[] args) {
         JFrame frame = new JFrame("DoD Prototype");
         DoD_Prototype panel = new DoD_Prototype();
-
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1226, 733);
         frame.add(panel);
         frame.setVisible(true);
         panel.requestFocusInWindow();
     }
-	
-	private void clearMatchingEnemies() {
-		enemyOrbs.removeIf(orb -> orb.matchesPlayer(orientation, triangleColor));
-	}
 }
