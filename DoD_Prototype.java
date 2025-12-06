@@ -145,7 +145,12 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         switch (e.getKeyCode()) {
             case KeyEvent.VK_RIGHT -> rotateRight();
             case KeyEvent.VK_LEFT -> rotateLeft();
-            case KeyEvent.VK_DOWN -> startFlicker();
+            case KeyEvent.VK_DOWN -> {
+				if (!inputLocked) {
+					clearMatchingEnemies();
+					startFlicker();
+				}
+			}
             case KeyEvent.VK_UP -> {
                 if (!inputLocked) {
                     if (triangleColor == Color.RED) triangleColor = Color.GREEN;
