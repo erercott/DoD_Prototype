@@ -4,6 +4,10 @@ import java.util.Collections;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class DoD_Prototype extends JPanel implements KeyListener {
 
@@ -13,20 +17,26 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private Color triangleColor = Color.RED;
     private boolean flickerVisible = true;
     private int flickerInterval = 30;
+    private BufferedImage characterPortrait;
 
-    // Arena parameters
-    private int triangleSize = 50;
-    private int arenaMargin = 5;
-    private int arenaSize = triangleSize * 2 + arenaMargin * 2;
-    private int arenaBottomMargin = 30;
+    private int portraitWidth = 220; 
+    private int arenaHeight = 500;   
+    private int playerBoxWidth = 50;  
+    private int playerBoxHeight = 50; 
+    private int triangleMargin = 4;   
 
     public DoD_Prototype() {
         setFocusable(true);
         addKeyListener(this);
 
+        try {
+            characterPortrait = ImageIO.read(new File("portrait.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         enemyOrbs = new ArrayList<>();
 
-        // Spawn orbs after panel is displayed
         addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentShown(java.awt.event.ComponentEvent e) { spawnOrbs(); }
             public void componentResized(java.awt.event.ComponentEvent e) { if (enemyOrbs.isEmpty()) spawnOrbs(); }
@@ -39,58 +49,77 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-
-        // Outer HUD border
         int inset = 40;
-        int bottomInset = 150;
-        int thickness = 5;
+
+        // --- Arena ---
+        int arenaX = inset;
+        int arenaY = inset;
+        int arenaW = getWidth() - inset * 2 - portraitWidth - 20;
+        int arenaH = arenaHeight;
+
         Stroke oldStroke = g2d.getStroke();
-        g2d.setStroke(new BasicStroke(thickness));
+        g2d.setStroke(new BasicStroke(5));
         g2d.setColor(new Color(0, 180, 255));
-        g2d.drawRect(inset, inset, getWidth() - inset * 2, getHeight() - bottomInset - inset);
+        g2d.drawRect(arenaX, arenaY, arenaW, arenaH);
         g2d.setStroke(oldStroke);
 
-        // Arena
-        int arenaX = getWidth() / 2 - arenaSize / 2;
-        int arenaY = getHeight() - arenaSize - arenaBottomMargin;
-        g2d.setColor(Color.LIGHT_GRAY);
-        g2d.drawRect(arenaX, arenaY, arenaSize, arenaSize);
+        // --- Player box ---
+        int playerX = arenaX + arenaW / 2 - playerBoxWidth / 2;
+        int playerY = arenaY + arenaH + 10;
+        g2d.setColor(Color.BLACK);
+        g2d.setStroke(new BasicStroke(1)); 
+        g2d.drawRect(playerX, playerY, playerBoxWidth, playerBoxHeight);
 
-        // Draw enemy orbs
-        for (EnemyOrb orb : enemyOrbs) orb.draw(g2d);
-
-        // Draw central triangle if visible
+        // --- Central triangle inside player box ---
         if (flickerVisible) {
             AffineTransform old = g2d.getTransform();
-            g2d.translate(getWidth() / 2, arenaY + arenaSize / 2);
+            g2d.translate(playerX + playerBoxWidth / 2, playerY + playerBoxHeight / 2);
             g2d.rotate(Math.toRadians(orientation * 90));
-
+            int triangleSize = (playerBoxWidth / 2) - triangleMargin; 
             int[] xPoints = {0, -triangleSize, -triangleSize};
             int[] yPoints = {0, -triangleSize, triangleSize};
-
             g2d.setColor(triangleColor);
             g2d.fillPolygon(xPoints, yPoints, 3);
             g2d.setTransform(old);
         }
+
+        // --- Character portrait ---
+        if (characterPortrait != null) {
+            int portraitX = getWidth() - portraitWidth - 20;
+            int portraitY = arenaY;
+            int portraitH = arenaH;
+            g2d.drawImage(characterPortrait, portraitX, portraitY, portraitWidth, portraitH, null);
+
+            g2d.setStroke(new BasicStroke(2)); 
+            g2d.setColor(Color.BLACK);
+            g2d.drawRect(portraitX, portraitY, portraitWidth, portraitH);
+            g2d.setStroke(oldStroke);
+        }
+
+        // --- Enemy orbs inside arena ---
+        for (EnemyOrb orb : enemyOrbs) orb.draw(g2d);
     }
 
     private void spawnOrbs() {
         enemyOrbs.clear();
-        int numOrbs = 1 + (int)(Math.random() * 3); // 1-3 orbs
+        int numOrbs = 1 + (int)(Math.random() * 3);
         int orbSize = 50;
 
-        int inset = 40, bottomInset = 150;
-        int bigX = inset, bigY = inset;
-        int bigW = getWidth() - inset * 2, bigH = getHeight() - bottomInset - inset;
-        int slotWidth = bigW / numOrbs;
+        int inset = 40;
+        int arenaX = inset;
+        int arenaY = inset;
+        int arenaW = getWidth() - inset * 2 - portraitWidth - 20;
+        int arenaH = arenaHeight;
+
+        int slotWidth = arenaW / numOrbs;
         Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
-		ArrayList<Color> orbColors = new ArrayList<>();
-		for (int i = 0; i < numOrbs; i++) orbColors.add(colors[i % colors.length]);
-		Collections.shuffle(orbColors);
+        ArrayList<Color> orbColors = new ArrayList<>();
+        for (int i = 0; i < numOrbs; i++) orbColors.add(colors[i % colors.length]);
+        Collections.shuffle(orbColors);
 
         for (int i = 0; i < numOrbs; i++) {
-            int orbX = bigX + i * slotWidth + slotWidth / 2 - orbSize / 2;
-            int orbY = bigY + bigH / 2 - orbSize / 2;
+            int orbX = arenaX + i * slotWidth + slotWidth / 2 - orbSize / 2;
+            int orbY = arenaY + arenaH / 2 - orbSize / 2;
             int orbOrientation = (int)(Math.random() * 4);
             Color orbColor = orbColors.get(i);
             enemyOrbs.add(new EnemyOrb(orbX, orbY, orbSize, orbColor, orbOrientation));
@@ -109,10 +138,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             @Override
             public void actionPerformed(ActionEvent e) {
                 long elapsed = System.currentTimeMillis() - startTime;
-                flickerVisible = (elapsed / flickerInterval % 2 == 0); // toggle visibility
+                flickerVisible = (elapsed / flickerInterval % 2 == 0);
                 repaint();
-
-                if (elapsed >= 500) { // stop after 500ms
+                if (elapsed >= 500) {
                     flickerVisible = true;
                     inputLocked = false;
                     ((Timer) e.getSource()).stop();
@@ -122,29 +150,28 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         }).start();
     }
 
-  @Override
-public void keyPressed(KeyEvent e) {
-    if (inputLocked) return;
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (inputLocked) return;
 
-    switch (e.getKeyCode()) {
-        case KeyEvent.VK_RIGHT -> rotateRight();
-        case KeyEvent.VK_LEFT -> rotateLeft();
-        case KeyEvent.VK_DOWN -> {
-			clearMatchingEnemies();
-			startFlicker(() -> {
- 			if(!enemyOrbs.isEmpty()) return;
-				spawnOrbs();
-			});
-		}
-        case KeyEvent.VK_UP -> {
-            if (triangleColor.equals(Color.RED)) triangleColor = Color.GREEN;
-            else if (triangleColor.equals(Color.GREEN)) triangleColor = Color.BLUE;
-            else triangleColor = Color.RED;
-            repaint();
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_RIGHT -> rotateRight();
+            case KeyEvent.VK_LEFT -> rotateLeft();
+            case KeyEvent.VK_DOWN -> {
+                clearMatchingEnemies();
+                startFlicker(() -> {
+                    if (!enemyOrbs.isEmpty()) return;
+                    spawnOrbs();
+                });
+            }
+            case KeyEvent.VK_UP -> {
+                if (triangleColor.equals(Color.RED)) triangleColor = Color.GREEN;
+                else if (triangleColor.equals(Color.GREEN)) triangleColor = Color.BLUE;
+                else triangleColor = Color.RED;
+                repaint();
+            }
         }
     }
-}
-
 
     @Override public void keyReleased(KeyEvent e) {}
     @Override public void keyTyped(KeyEvent e) {}
