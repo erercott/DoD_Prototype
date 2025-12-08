@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
@@ -83,12 +84,15 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         int bigW = getWidth() - inset * 2, bigH = getHeight() - bottomInset - inset;
         int slotWidth = bigW / numOrbs;
         Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
+		ArrayList<Color> orbColors = new ArrayList<>();
+		for (int i = 0; i < numOrbs; i++) orbColors.add(colors[i % colors.length]);
+		Collections.shuffle(orbColors);
 
         for (int i = 0; i < numOrbs; i++) {
             int orbX = bigX + i * slotWidth + slotWidth / 2 - orbSize / 2;
             int orbY = bigY + bigH / 2 - orbSize / 2;
             int orbOrientation = (int)(Math.random() * 4);
-            Color orbColor = colors[i % colors.length];
+            Color orbColor = orbColors.get(i);
             enemyOrbs.add(new EnemyOrb(orbX, orbY, orbSize, orbColor, orbOrientation));
         }
     }
