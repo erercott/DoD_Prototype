@@ -126,9 +126,12 @@ public void keyPressed(KeyEvent e) {
         case KeyEvent.VK_RIGHT -> rotateRight();
         case KeyEvent.VK_LEFT -> rotateLeft();
         case KeyEvent.VK_DOWN -> {
-            clearMatchingEnemies();
-            startFlicker(this::spawnOrbs);
-        }
+			clearMatchingEnemies();
+			startFlicker(() -> {
+ 			if(!enemyOrbs.isEmpty()) return;
+				spawnOrbs();
+			});
+		}
         case KeyEvent.VK_UP -> {
             if (triangleColor.equals(Color.RED)) triangleColor = Color.GREEN;
             else if (triangleColor.equals(Color.GREEN)) triangleColor = Color.BLUE;
