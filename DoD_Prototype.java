@@ -224,12 +224,17 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         enemyOrbs.removeIf(orb -> orb.matchesPlayer(orientation, triangleColor));
 		
 		//color determination
-		int colorIndex = switch (triangleColor) {
-			case RED -> 0;
-			case GREEN -> 1;
-			case BLUE -> 2;
-			default -> -1;
-		};
+		int colorIndex;
+		if (triangleColor.equals(Color.RED)){
+			colorIndex = 0;
+		} else if (triangleColor.equals(Color.GREEN)){
+			colorIndex = 1;
+		} else if (triangleColor.equals(Color.BLUE)){
+			colorIndex = 2;
+		} else {
+			return;
+		}
+		
 		if (colorIndex == -1) return;
 		
 		clearedOrientations[colorIndex][orientation] = true;
