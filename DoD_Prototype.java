@@ -24,6 +24,10 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private int playerBoxWidth = 50;  
     private int playerBoxHeight = 50; 
     private int triangleMargin = 4;   
+	
+	// - Combo Tracking
+	private boolean[][] clearedOrientations = new boolean[3][4];
+	private int[] completedCycles = new int [3];
 
     public DoD_Prototype() {
         setFocusable(true);
