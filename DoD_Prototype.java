@@ -182,7 +182,30 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
     private void clearMatchingEnemies() {
         enemyOrbs.removeIf(orb -> orb.matchesPlayer(orientation, triangleColor));
-    }
+		
+		//color determination
+		int colorIndex = switch (triangleColor) {
+			case RED -> 0;
+			case GREEN -> 1;
+			case BLUE -> 2;
+			default -> -1;
+		};
+		if (colorIndex == -1) return;
+		
+		clearedOrientations[colorIndex][orientation] = true;
+		
+		boolean allCleared = true;
+		for(boolean cleared : clearedOrientations[colorIndex]){
+			if (!cleared){
+				allCleared = false;
+				break;
+				}
+			}
+		if (allCleared) {
+			completedCycles[colorIndex]++;
+			clearedOrientations[colorIndex] = new boolean[4];
+		}
+	
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("DoD Prototype");
