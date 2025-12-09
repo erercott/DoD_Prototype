@@ -98,6 +98,46 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             g2d.setColor(Color.BLACK);
             g2d.drawRect(portraitX, portraitY, portraitWidth, portraitH);
             g2d.setStroke(oldStroke);
+			
+			//combo shapes
+			int size = 20;
+			int spacing = 20;
+			int startX = getWidth() - portraitWidth - 20;
+			int startY = arenaY + arenaHeight + 40;
+			
+			Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
+			
+			for (int i = 0; i < 3; i++){
+				int x = startX + i * (size * 2 + spacing);
+				int y = startY;
+				
+				int cx = x + size;
+				int cy = y + size;
+				
+				int[] xPoints = {0, -size, 0, size};
+				int[] yPoints = {-size, 0, size, 0};
+				
+				g2d.setColor(colors[i]);
+				g2d.fillPolygon(
+				new int[]{cx + xPoints[0], cx + xPoints[1], cx + xPoints[2], cx + xPoints[3]},
+				new int[]{cy + yPoints[0], cy + yPoints[1], cy + yPoints[2], cy + yPoints[3]},
+				4
+				);
+				
+				g2d.setColor(Color.BLACK);
+				g2d.setStroke(new BasicStroke(2));
+				g2d.drawPolygon(
+					new int[]{cx + xPoints[0], cx + xPoints[1], cx + xPoints[2], cx + xPoints[3]},
+					new int[]{cy + yPoints[0], cy + yPoints[1], cy + yPoints[2], cy + yPoints[3]},
+					4
+				);
+				
+				g2d.setColor(Color.BLACK);
+				g2d.setFont(new Font("Arial", Font.BOLD, 14));
+				String count = Integer.toString(completedCycles[i]);
+				int stringWidth = g2d.getFontMetrics().stringWidth(count);
+				g2d.drawString(count, cx - stringWidth / 2, cy + size + 16);
+			}
         }
 
         // --- Enemy orbs inside arena ---
@@ -205,6 +245,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 			completedCycles[colorIndex]++;
 			clearedOrientations[colorIndex] = new boolean[4];
 		}
+	}
 	
 
     public static void main(String[] args) {
