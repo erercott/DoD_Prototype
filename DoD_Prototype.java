@@ -221,25 +221,37 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     @Override public void keyTyped(KeyEvent e) {}
 
     private void clearMatchingEnemies() {
-        enemyOrbs.removeIf(orb -> orb.matchesPlayer(orientation, triangleColor));
+		boolean hit = false; 
 		
 		//color determination
 		int colorIndex;
-		if (triangleColor.equals(Color.RED)){
-			colorIndex = 0;
-		} else if (triangleColor.equals(Color.GREEN)){
-			colorIndex = 1;
-		} else if (triangleColor.equals(Color.BLUE)){
-			colorIndex = 2;
-		} else {
-			return;
+		if (triangleColor.equals(Color.RED)) colorIndex = 0;
+		else if (triangleColor.equals(Color.GREEN)) colorIndex = 1;
+		else colorIndex = 2;
+	
+		ArrayList<EnemyOrb> toRemove = new ArrayList<>();
+			for(EnemyOrb orb : enemyOrbs){
+				if (orb.matchesPlayer(orientation, triangleColor)){
+					hit = true;
+					clearedOrientations[colorIndex][orientation] = true;
+					toRemove.add(orb);
+				}
+			}
+		enemyOrbs.removeAll(toRemove);
+			if (hit){
+				boolean allCleared = true;
+				for(boolean cleared : clearedOrientations[colorIndex]){
+					if(!cleared) { allCleared = false; break;}
+				}
+			if (allCleared){
+				completedCycles[colorIndex]++;
+				clearedOrientations[colorIndex] = new boolean[4];
+				}
+			} else {
+				clearedOrientations[colorIndex] = new boolean[4];
+				completedCycles[colorIndex] = 0;
+			}
 		}
-		
-		if (colorIndex == -1) return;
-		
-		clearedOrientations[colorIndex][orientation] = true;
-		
-		boolean allCleared = true;
 		for(boolean cleared : clearedOrientations[colorIndex]){
 			if (!cleared){
 				allCleared = false;
