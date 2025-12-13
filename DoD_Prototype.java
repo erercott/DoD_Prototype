@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.awt.*;
@@ -11,7 +12,14 @@ import java.io.IOException;
 
 public class DoD_Prototype extends JPanel implements KeyListener {
 
-    private ArrayList<EnemyOrb> enemyOrbs;
+    // --- Intro sequence ---
+    private ArrayList<StoryFrame> introFrames = new ArrayList<>();
+    private boolean inIntro = true;
+    private int currentFrame = 0;
+    private int lettersShown = 0;
+
+    // --- Gameplay ---
+    private ArrayList<EnemyOrb> enemyOrbs = new ArrayList<>();
     private int orientation = 0;
     private boolean inputLocked = false;
     private Color triangleColor = Color.RED;
@@ -19,15 +27,15 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private int flickerInterval = 30;
     private BufferedImage characterPortrait;
 
-    private int portraitWidth = 220; 
-    private int arenaHeight = 500;   
-    private int playerBoxWidth = 50;  
-    private int playerBoxHeight = 50; 
-    private int triangleMargin = 4;   
-	
-	// - Combo Tracking
-	private boolean[][] clearedOrientations = new boolean[3][4];
-	private int[] completedCycles = new int [3];
+    private int portraitWidth = 220;
+    private int arenaHeight = 500;
+    private int playerBoxWidth = 50;
+    private int playerBoxHeight = 50;
+    private int triangleMargin = 4;
+
+    // --- Combo Tracking ---
+    private boolean[][] clearedOrientations = new boolean[3][4];
+    private int[] completedCycles = new int[3];
 
     public DoD_Prototype() {
         setFocusable(true);
@@ -39,14 +47,46 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             e.printStackTrace();
         }
 
-        enemyOrbs = new ArrayList<>();
+        try {
+            introFrames.add(new StoryFrame(ImageIO.read(new File("scene00.png")),
+                    "Once upon a time, there lived a Kingdom inside of a computer...",
+                    "One day the computer was infected by an unknown virus."
+            ));
+            introFrames.add(new StoryFrame(ImageIO.read(new File("scene01.png")),
+                    "The ruler of the kingdom held its only defense against the plague",
+                    "but in his old age could not use it to defend the kingdom.",
+                    "The king asks YOU! Could you bear the sacrifice of your own arm?"
+            ));
+            introFrames.add(new StoryFrame(ImageIO.read(new File("scene02.png")),
+                    "This is the story of Random Access Memory"
+            ));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // --- Intro typewriter timer ---
+        new Timer(50, e -> {
+            if (inIntro && currentFrame < introFrames.size()) {
+                StoryFrame frame = introFrames.get(currentFrame);
+                int totalLetters = Arrays.stream(frame.lines).mapToInt(String::length).sum();
+                if (lettersShown < totalLetters) {
+                    lettersShown++;
+                } else {
+                    // Move to next frame
+                    lettersShown = 0;
+                    currentFrame++;
+                    if (currentFrame >= introFrames.size()) inIntro = false;
+                }
+                repaint();
+            }
+        }).start();
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentShown(java.awt.event.ComponentEvent e) { spawnOrbs(); }
             public void componentResized(java.awt.event.ComponentEvent e) { if (enemyOrbs.isEmpty()) spawnOrbs(); }
         });
 
-        new javax.swing.Timer(16, e -> repaint()).start();
+        new Timer(16, e -> repaint()).start();
     }
 
     @Override
@@ -54,6 +94,29 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         int inset = 40;
+
+        // --- Intro Sequence ---
+        if (inIntro && currentFrame < introFrames.size()) {
+            StoryFrame frame = introFrames.get(currentFrame);
+            g.drawImage(frame.image, 0, 0, getWidth(), getHeight(), null);
+
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Times New Roman", Font.BOLD, 24));
+
+            int y = getHeight() - 100;
+            int lineHeight = 30;
+
+            int lettersRemaining = lettersShown;
+            for (String line : frame.lines) {
+                int len = Math.min(line.length(), lettersRemaining);
+                g2d.drawString(line.substring(0, len), 50, y);
+                y += lineHeight;
+                lettersRemaining -= len;
+                if (lettersRemaining <= 0) break;
+            }
+
+            return; // Prevent gameplay from drawing during intro
+        }
 
         // --- Arena ---
         int arenaX = inset;
@@ -71,7 +134,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         int playerX = arenaX + arenaW / 2 - playerBoxWidth / 2;
         int playerY = arenaY + arenaH + 10;
         g2d.setColor(Color.BLACK);
-        g2d.setStroke(new BasicStroke(1)); 
+        g2d.setStroke(new BasicStroke(1));
         g2d.drawRect(playerX, playerY, playerBoxWidth, playerBoxHeight);
 
         // --- Central triangle inside player box ---
@@ -79,7 +142,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             AffineTransform old = g2d.getTransform();
             g2d.translate(playerX + playerBoxWidth / 2, playerY + playerBoxHeight / 2);
             g2d.rotate(Math.toRadians(orientation * 90));
-            int triangleSize = (playerBoxWidth / 2) - triangleMargin; 
+            int triangleSize = (playerBoxWidth / 2) - triangleMargin;
             int[] xPoints = {0, -triangleSize, -triangleSize};
             int[] yPoints = {0, -triangleSize, triangleSize};
             g2d.setColor(triangleColor);
@@ -87,57 +150,56 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             g2d.setTransform(old);
         }
 
-        // --- Character portrait ---
+        // --- Character portrait and combo shapes ---
         if (characterPortrait != null) {
             int portraitX = getWidth() - portraitWidth - 20;
             int portraitY = arenaY;
             int portraitH = arenaH;
             g2d.drawImage(characterPortrait, portraitX, portraitY, portraitWidth, portraitH, null);
 
-            g2d.setStroke(new BasicStroke(2)); 
+            g2d.setStroke(new BasicStroke(2));
             g2d.setColor(Color.BLACK);
             g2d.drawRect(portraitX, portraitY, portraitWidth, portraitH);
             g2d.setStroke(oldStroke);
-			
-			//combo shapes
-			int size = 20;
-			int spacing = 20;
-			int startX = getWidth() - portraitWidth - 20;
-			int startY = arenaY + arenaHeight + 40;
-			
-			Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
-			
-			for (int i = 0; i < 3; i++){
-				int x = startX + i * (size * 2 + spacing);
-				int y = startY;
-				
-				int cx = x + size;
-				int cy = y + size;
-				
-				int[] xPoints = {0, -size, 0, size};
-				int[] yPoints = {-size, 0, size, 0};
-				
-				g2d.setColor(colors[i]);
-				g2d.fillPolygon(
-				new int[]{cx + xPoints[0], cx + xPoints[1], cx + xPoints[2], cx + xPoints[3]},
-				new int[]{cy + yPoints[0], cy + yPoints[1], cy + yPoints[2], cy + yPoints[3]},
-				4
-				);
-				
-				g2d.setColor(Color.BLACK);
-				g2d.setStroke(new BasicStroke(2));
-				g2d.drawPolygon(
-					new int[]{cx + xPoints[0], cx + xPoints[1], cx + xPoints[2], cx + xPoints[3]},
-					new int[]{cy + yPoints[0], cy + yPoints[1], cy + yPoints[2], cy + yPoints[3]},
-					4
-				);
-				
-				g2d.setColor(Color.BLACK);
-				g2d.setFont(new Font("Arial", Font.BOLD, 14));
-				String count = Integer.toString(completedCycles[i]);
-				int stringWidth = g2d.getFontMetrics().stringWidth(count);
-				g2d.drawString(count, cx - stringWidth / 2, cy + size + 16);
-			}
+
+            int size = 20;
+            int spacing = 20;
+            int startX = getWidth() - portraitWidth - 20;
+            int startY = arenaY + arenaHeight + 40;
+            Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
+
+            for (int i = 0; i < 3; i++) {
+                if (completedCycles[i] == 0) continue;
+                int x = startX + i * (size * 2 + spacing);
+                int y = startY;
+
+                int cx = x + size;
+                int cy = y + size;
+
+                int[] xPoints = {0, -size, 0, size};
+                int[] yPoints = {-size, 0, size, 0};
+
+                g2d.setColor(colors[i]);
+                g2d.fillPolygon(
+                        new int[]{cx + xPoints[0], cx + xPoints[1], cx + xPoints[2], cx + xPoints[3]},
+                        new int[]{cy + yPoints[0], cy + yPoints[1], cy + yPoints[2], cy + yPoints[3]},
+                        4
+                );
+
+                g2d.setColor(Color.BLACK);
+                g2d.setStroke(new BasicStroke(2));
+                g2d.drawPolygon(
+                        new int[]{cx + xPoints[0], cx + xPoints[1], cx + xPoints[2], cx + xPoints[3]},
+                        new int[]{cy + yPoints[0], cy + yPoints[1], cy + yPoints[2], cy + yPoints[3]},
+                        4
+                );
+
+                g2d.setColor(Color.BLACK);
+                g2d.setFont(new Font("Arial", Font.BOLD, 14));
+                String count = Integer.toString(completedCycles[i]);
+                int stringWidth = g2d.getFontMetrics().stringWidth(count);
+                g2d.drawString(count, cx - stringWidth / 2, cy + size + 16);
+            }
         }
 
         // --- Enemy orbs inside arena ---
@@ -146,7 +208,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
     private void spawnOrbs() {
         enemyOrbs.clear();
-        int numOrbs = 1 + (int)(Math.random() * 3);
+        int numOrbs = 1 + (int) (Math.random() * 3);
         int orbSize = 50;
 
         int inset = 40;
@@ -164,7 +226,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         for (int i = 0; i < numOrbs; i++) {
             int orbX = arenaX + i * slotWidth + slotWidth / 2 - orbSize / 2;
             int orbY = arenaY + arenaH / 2 - orbSize / 2;
-            int orbOrientation = (int)(Math.random() * 4);
+            int orbOrientation = (int) (Math.random() * 4);
             Color orbColor = orbColors.get(i);
             enemyOrbs.add(new EnemyOrb(orbX, orbY, orbSize, orbColor, orbOrientation));
         }
@@ -173,12 +235,13 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private void rotateRight() { orientation = (orientation + 1) % 4; repaint(); }
     private void rotateLeft() { orientation = (orientation + 3) % 4; repaint(); }
 
+    // --- Flicker effect ---
     private void startFlicker(Runnable afterFlicker) {
         flickerVisible = true;
         inputLocked = true;
         long startTime = System.currentTimeMillis();
 
-        new javax.swing.Timer(16, new ActionListener() {
+        new Timer(16, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 long elapsed = System.currentTimeMillis() - startTime;
@@ -194,6 +257,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         }).start();
     }
 
+    // --- Input ---
     @Override
     public void keyPressed(KeyEvent e) {
         if (inputLocked) return;
@@ -221,49 +285,30 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     @Override public void keyTyped(KeyEvent e) {}
 
     private void clearMatchingEnemies() {
-		boolean hit = false; 
-		
-		//color determination
-		int colorIndex;
-		if (triangleColor.equals(Color.RED)) colorIndex = 0;
-		else if (triangleColor.equals(Color.GREEN)) colorIndex = 1;
-		else colorIndex = 2;
-	
-		ArrayList<EnemyOrb> toRemove = new ArrayList<>();
-			for(EnemyOrb orb : enemyOrbs){
-				if (orb.matchesPlayer(orientation, triangleColor)){
-					hit = true;
-					clearedOrientations[colorIndex][orientation] = true;
-					toRemove.add(orb);
-				}
-			}
-		enemyOrbs.removeAll(toRemove);
-			if (hit){
-				boolean allCleared = true;
-				for(boolean cleared : clearedOrientations[colorIndex]){
-					if(!cleared) { allCleared = false; break;}
-				}
-			if (allCleared){
-				completedCycles[colorIndex]++;
-				clearedOrientations[colorIndex] = new boolean[4];
-				}
-			} else {
-				clearedOrientations[colorIndex] = new boolean[4];
-				completedCycles[colorIndex] = 0;
-			}
-		}
-		for(boolean cleared : clearedOrientations[colorIndex]){
-			if (!cleared){
-				allCleared = false;
-				break;
-				}
-			}
-		if (allCleared) {
-			completedCycles[colorIndex]++;
-			clearedOrientations[colorIndex] = new boolean[4];
-		}
-	}
-	
+        boolean hit = false;
+        int colorIndex = triangleColor.equals(Color.RED) ? 0 : triangleColor.equals(Color.GREEN) ? 1 : 2;
+
+        ArrayList<EnemyOrb> toRemove = new ArrayList<>();
+        for (EnemyOrb orb : enemyOrbs) {
+            if (orb.matchesPlayer(orientation, triangleColor)) {
+                hit = true;
+                clearedOrientations[colorIndex][orientation] = true;
+                toRemove.add(orb);
+            }
+        }
+        enemyOrbs.removeAll(toRemove);
+
+        boolean allCleared = true;
+        for (boolean cleared : clearedOrientations[colorIndex]) if (!cleared) allCleared = false;
+
+        if (hit && allCleared) {
+            completedCycles[colorIndex]++;
+            clearedOrientations[colorIndex] = new boolean[4];
+        } else if (!hit) {
+            clearedOrientations[colorIndex] = new boolean[4];
+            completedCycles[colorIndex] = 0;
+        }
+    }
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("DoD Prototype");
