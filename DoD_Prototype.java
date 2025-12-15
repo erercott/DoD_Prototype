@@ -28,6 +28,13 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private boolean gameStarted = false;
     private int strobeIndex = 0;
 
+    // --- Arena/Player ---
+    private final int inset = 40;
+    private final int arenaHeight = 500;
+    private final int portraitWidth = 220;
+    private final int playerBoxWidth = 50;
+    private final int playerBoxHeight = 50;
+
     public DoD_Prototype() {
         setFocusable(true);
         addKeyListener(this);
@@ -138,16 +145,28 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
         // --- Gameplay ---
         if (gameStarted) {
+            int arenaW = getWidth() - inset*2 - portraitWidth - 20;
+            int arenaH = arenaHeight;
+
+            // Strobing arena border
             float hue = (strobeIndex % 360) / 360f;
             g2d.setColor(Color.getHSBColor(hue, 1f, 1f));
             g2d.setStroke(new BasicStroke(5));
-            g2d.drawRect(0, 0, getWidth(), getHeight());
+            g2d.drawRect(inset, inset, arenaW, arenaH);
 
+            // Small white player box
+            int playerX = inset + arenaW/2 - playerBoxWidth/2;
+            int playerY = inset + arenaH + 10;
+            g2d.setColor(Color.WHITE);
+            g2d.setStroke(new BasicStroke(1));
+            g2d.drawRect(playerX, playerY, playerBoxWidth, playerBoxHeight);
+
+            // Placeholder text for gameplay
             g2d.setColor(Color.GRAY);
             g2d.setFont(new Font("Arial", Font.BOLD, 36));
-            String msg = "Gameplay will appear here...";
+            String msg = "Gameplay elements go here...";
             int msgW = g2d.getFontMetrics().stringWidth(msg);
-            g2d.drawString(msg, (getWidth() - msgW) / 2, getHeight() / 2);
+            g2d.drawString(msg, (getWidth() - msgW)/2, inset + arenaH/2);
         }
     }
 
