@@ -29,9 +29,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private int strobeIndex = 0;
 
     // --- Arena/Player ---
-    private final int inset = 40;
     private final int arenaHeight = 500;
-    private final int portraitWidth = 220;
     private final int playerBoxWidth = 50;
     private final int playerBoxHeight = 50;
 
@@ -145,18 +143,20 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
         // --- Gameplay ---
         if (gameStarted) {
-            int arenaW = getWidth() - inset*2 - portraitWidth - 20;
+            int arenaW = getWidth() - 200;
             int arenaH = arenaHeight;
+            int arenaX = (getWidth() - arenaW) / 2;
+            int arenaY = (getHeight() - arenaH) / 2;
 
             // Strobing arena border
             float hue = (strobeIndex % 360) / 360f;
             g2d.setColor(Color.getHSBColor(hue, 1f, 1f));
             g2d.setStroke(new BasicStroke(5));
-            g2d.drawRect(inset, inset, arenaW, arenaH);
+            g2d.drawRect(arenaX, arenaY, arenaW, arenaH);
 
-            // Small white player box
-            int playerX = inset + arenaW/2 - playerBoxWidth/2;
-            int playerY = inset + arenaH + 10;
+            // Player box centered inside arena
+            int playerX = arenaX + arenaW/2 - playerBoxWidth/2;
+            int playerY = arenaY + arenaH + 10;
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(1));
             g2d.drawRect(playerX, playerY, playerBoxWidth, playerBoxHeight);
@@ -166,7 +166,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             g2d.setFont(new Font("Arial", Font.BOLD, 36));
             String msg = "Gameplay elements go here...";
             int msgW = g2d.getFontMetrics().stringWidth(msg);
-            g2d.drawString(msg, (getWidth() - msgW)/2, inset + arenaH/2);
+            g2d.drawString(msg, (getWidth() - msgW)/2, arenaY + arenaH/2 - 60);
         }
     }
 
@@ -205,7 +205,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         DoD_Prototype panel = new DoD_Prototype();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1226, 733);
+        frame.setResizable(false);
         frame.add(panel);
+        frame.setLocationRelativeTo(null); // Center window
         frame.setVisible(true);
         panel.requestFocusInWindow();
     }
