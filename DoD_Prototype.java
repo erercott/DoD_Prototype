@@ -33,11 +33,10 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private final int playerBoxWidth = 50;
     private final int playerBoxHeight = 50;
 
-    // --- Levels ---
+    private int orientation = 0;
+    private Color playerColor = Color.RED;
     private int level = 0;
     private ArrayList<EnemyOrb> enemyOrbs = new ArrayList<>();
-    private Color playerColor = Color.RED;
-    private int orientation = 0;
 
     public DoD_Prototype() {
         setFocusable(true);
@@ -56,8 +55,11 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             introFrames.add(new StoryFrame(ImageIO.read(new File("scene02.png")),
                     "This is the story of Random Access Memory"
             ));
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        // Intro typewriter
         new Timer(50, e -> {
             if (inIntro && currentFrame < introFrames.size()) {
                 StoryFrame frame = introFrames.get(currentFrame);
@@ -80,6 +82,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             }
         }).start();
 
+        // Strobe animation
         new Timer(16, e -> {
             if (gameStarted) strobeIndex++;
             repaint();
@@ -88,47 +91,17 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
     private void spawnLevel(int lvl) {
         enemyOrbs.clear();
-        switch(lvl) {
-            case 0:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.RED,0));
-                break;
-            case 1:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.RED,0));
-                enemyOrbs.add(new EnemyOrb(60,0,50,Color.RED,0));
-                break;
-            case 2:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.RED,0));
-                enemyOrbs.add(new EnemyOrb(60,0,50,Color.RED,0));
-                enemyOrbs.add(new EnemyOrb(120,0,50,Color.RED,0));
-                break;
-            case 3:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,0));
-                enemyOrbs.add(new EnemyOrb(60,0,50,Color.BLUE,1));
-                break;
-            case 4:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,0));
-                enemyOrbs.add(new EnemyOrb(60,0,50,Color.BLUE,3));
-                break;
-            case 5:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,1));
-                enemyOrbs.add(new EnemyOrb(60,0,50,Color.BLUE,1));
-                break;
-            case 6:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,3));
-                enemyOrbs.add(new EnemyOrb(60,0,50,Color.GREEN,1));
-                break;
-            case 7:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,2));
-                enemyOrbs.add(new EnemyOrb(60,0,50,Color.GREEN,0));
-                break;
-            case 8:
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,1));
-                enemyOrbs.add(new EnemyOrb(60,0,50,Color.GREEN,3));
-                break;
-            case 9:
-                // Placeholder final boss
-                enemyOrbs.add(new EnemyOrb(0,0,50,Color.MAGENTA,0));
-                break;
+        switch (lvl) {
+            case 0 -> enemyOrbs.add(new EnemyOrb(0, 0, 50, Color.RED, 0));
+            case 1 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.RED,0));
+            case 2 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.RED,0));
+            case 3 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,0));
+            case 4 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,1));
+            case 5 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,2));
+            case 6 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,0));
+            case 7 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,1));
+            case 8 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,2));
+           
         }
     }
 
@@ -136,9 +109,11 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(Color.BLACK);
-        g2d.fillRect(0,0,getWidth(),getHeight());
 
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        // --- Intro ---
         if (inIntro && currentFrame < introFrames.size()) {
             StoryFrame frame = introFrames.get(currentFrame);
             int imgW = frame.image.getWidth();
@@ -148,90 +123,121 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             double scale = Math.min((double) maxW / imgW, (double) maxH / imgH);
             int drawW = (int)(imgW * scale);
             int drawH = (int)(imgH * scale);
-            int imgX = (getWidth() - drawW)/2;
+            int imgX = (getWidth() - drawW) / 2;
             int imgY = 50;
-            g2d.drawImage(frame.image,imgX,imgY,drawW,drawH,null);
+            g2d.drawImage(frame.image, imgX, imgY, drawW, drawH, null);
 
             g2d.setColor(Color.WHITE);
             g2d.setFont(new Font("Times New Roman", Font.BOLD, 24));
             int lineHeight = 30;
-            int y = getHeight() - frame.lines.length*lineHeight - 50;
+            int y = getHeight() - frame.lines.length * lineHeight - 50;
 
             int lettersRemaining = lettersShown;
-            for(String line:frame.lines) {
-                int len = Math.min(line.length(),lettersRemaining);
-                String substr = line.substring(0,len);
-                int textWidth = g2d.getFontMetrics().stringWidth(substr);
-                int x = (getWidth()-textWidth)/2;
-                g2d.drawString(substr,x,y);
-                y+=lineHeight;
-                lettersRemaining-=len;
-                if(lettersRemaining<=0) break;
+            for (String line : frame.lines) {
+                int len = Math.min(line.length(), lettersRemaining);
+                String substring = line.substring(0, len);
+                int textWidth = g2d.getFontMetrics().stringWidth(substring);
+                int x = (getWidth() - textWidth) / 2;
+                g2d.drawString(substring, x, y);
+                y += lineHeight;
+                lettersRemaining -= len;
+                if (lettersRemaining <= 0) break;
             }
             return;
         }
 
-        if(inMenu) {
-            int triSize = Math.min(getWidth(),getHeight())/3;
-            int centerX = getWidth()/2;
-            int centerY = getHeight()/2;
-            int[] xPoints = {0,-triSize,-triSize};
-            int[] yPoints = {0,-triSize,triSize};
+        // --- Menu ---
+        if (inMenu) {
+            int triSize = Math.min(getWidth(), getHeight()) / 3;
+            int centerX = getWidth() / 2;
+            int centerY = getHeight() / 2;
+            int[] xPoints = {0, -triSize, -triSize};
+            int[] yPoints = {0, -triSize, triSize};
             AffineTransform old = g2d.getTransform();
-            g2d.translate(centerX,centerY);
-            g2d.rotate(Math.toRadians(menuOrientation*90));
+            g2d.translate(centerX, centerY);
+            g2d.rotate(Math.toRadians(menuOrientation * 90));
             g2d.setColor(menuColor);
-            g2d.fillPolygon(xPoints,yPoints,3);
+            g2d.fillPolygon(xPoints, yPoints, 3);
             g2d.setTransform(old);
             return;
         }
 
-        if(gameStarted) {
-            int arenaW = getWidth()-200;
+        // --- Gameplay ---
+        if (gameStarted) {
+            int arenaW = getWidth() - 200;
             int arenaH = arenaHeight;
-            int arenaX = (getWidth()-arenaW)/2;
-            int arenaY = (getHeight()-arenaH)/2;
+            int arenaX = (getWidth() - arenaW) / 2;
+            int arenaY = (getHeight() - arenaH) / 2;
 
-            float hue = (strobeIndex%360)/360f;
-            g2d.setColor(Color.getHSBColor(hue,1f,1f));
+            float hue = (strobeIndex % 360) / 360f;
+            g2d.setColor(Color.getHSBColor(hue, 1f, 1f));
             g2d.setStroke(new BasicStroke(5));
-            g2d.drawRect(arenaX,arenaY,arenaW,arenaH);
-
-            int playerX = arenaX + arenaW/2 - playerBoxWidth/2;
+            g2d.drawRect(arenaX, arenaY, arenaW, arenaH);
+			
+			//Player box
+            int playerX = arenaX + arenaW / 2 - playerBoxWidth / 2;
             int playerY = arenaY + arenaH + 10;
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(1));
-            g2d.drawRect(playerX,playerY,playerBoxWidth,playerBoxHeight);
-
-            g2d.setColor(Color.GRAY);
-            g2d.setFont(new Font("Arial", Font.BOLD, 36));
-            String msg = "Gameplay elements go here...";
-            int msgW = g2d.getFontMetrics().stringWidth(msg);
-            g2d.drawString(msg,(getWidth()-msgW)/2,arenaY+arenaH/2-60);
+            g2d.drawRect(playerX, playerY, playerBoxWidth, playerBoxHeight);
+			
+			//Triangle inside player box
+			int triSize = playerBoxWidth / 2 - 5;
+			AffineTransform old = g2d.getTransform();
+			g2d.translate(playerX + playerBoxWidth / 2, playerY + playerBoxHeight / 2);
+			g2d.rotate(Math.toRadians(orientation *90));
+			g2d.setColor(Color.RED);
+			g2d.fillPolygon(
+			new int[]{0, -triSize, -triSize},
+			new int[]{0, -triSize, triSize},
+			3
+		);
+			g2d.setTransform(old);
         }
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if(inIntro && e.getKeyCode()==KeyEvent.VK_SPACE) {
-            inIntro=false;
-            inMenu=true;
+        if (inIntro && e.getKeyCode() == KeyEvent.VK_SPACE) {
+            inIntro = false;
+            inMenu = true;
             repaint();
             return;
-        }
-
-        if(inMenu) {
-            switch(e.getKeyCode()) {
-                case KeyEvent.VK_RIGHT -> menuOrientation=(menuOrientation+1)%4;
-                case KeyEvent.VK_LEFT -> menuOrientation=(menuOrientation+3)%4;
+        } else if (gameStarted) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_RIGHT -> orientation = (orientation + 1) % 4;
+                case KeyEvent.VK_LEFT -> orientation = (orientation + 3) % 4;
                 case KeyEvent.VK_UP -> {
-                    if(menuColor.equals(Color.RED)) menuColor=Color.GREEN;
-                    else if(menuColor.equals(Color.GREEN)) menuColor=Color.BLUE;
-                    else menuColor=Color.RED;
+                    if (playerColor.equals(Color.RED) && level >= 1) playerColor = Color.BLUE;
+                    else if (playerColor.equals(Color.BLUE) && level >= 2) playerColor = Color.GREEN;
+                    else if (playerColor.equals(Color.GREEN)) playerColor = Color.RED;
                 }
                 case KeyEvent.VK_DOWN -> {
-                    inMenu=false;
-                    gameStarted=true;
+                    if (!enemyOrbs.isEmpty()) {
+                        EnemyOrb first = enemyOrbs.get(0);
+                        if (first.orientation == orientation) {
+                            enemyOrbs.remove(0);
+                            if (enemyOrbs.isEmpty()) {
+                                level++;
+                                spawnLevel(level);
+                            }
+                        }
+                    }
+                }
+            }
+            repaint();
+        } else if (inMenu) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_RIGHT -> menuOrientation = (menuOrientation + 1) % 4;
+                case KeyEvent.VK_LEFT -> menuOrientation = (menuOrientation + 3) % 4;
+                case KeyEvent.VK_UP -> {
+                    if (menuColor.equals(Color.RED)) menuColor = Color.GREEN;
+                    else if (menuColor.equals(Color.GREEN)) menuColor = Color.BLUE;
+                    else menuColor = Color.RED;
+                }
+                case KeyEvent.VK_DOWN -> {
+                    inMenu = false;
+                    gameStarted = true;
                     spawnLevel(level);
                     repaint();
                 }
@@ -246,7 +252,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         JFrame frame = new JFrame("DoD Prototype");
         DoD_Prototype panel = new DoD_Prototype();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1226,733);
+        frame.setSize(1226, 733);
         frame.setResizable(false);
         frame.add(panel);
         frame.setLocationRelativeTo(null);
@@ -257,12 +263,14 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     static class StoryFrame {
         BufferedImage image;
         String[] lines;
-        StoryFrame(BufferedImage image, String...lines){this.image=image;this.lines=lines;}
+        StoryFrame(BufferedImage image, String... lines) { this.image = image; this.lines = lines; }
     }
 
     static class EnemyOrb {
-        int x,y,size,orientation;
+        int x, y, size, orientation;
         Color color;
-        EnemyOrb(int x,int y,int size,Color color,int orientation){this.x=x;this.y=y;this.size=size;this.color=color;this.orientation=orientation;}
+        EnemyOrb(int x, int y, int size, Color color, int orientation) {
+            this.x = x; this.y = y; this.size = size; this.color = color; this.orientation = orientation;
+        }
     }
 }
