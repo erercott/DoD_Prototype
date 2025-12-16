@@ -91,17 +91,23 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
     private void spawnLevel(int lvl) {
         enemyOrbs.clear();
+        int startX = 100;
+        int startY = 100;
+        int spacing = 80;
+
         switch (lvl) {
-            case 0 -> enemyOrbs.add(new EnemyOrb(0, 0, 50, Color.RED, 0));
-            case 1 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.RED,0));
-            case 2 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.RED,0));
-            case 3 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,0));
-            case 4 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,1));
-            case 5 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.BLUE,2));
-            case 6 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,0));
-            case 7 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,1));
-            case 8 -> enemyOrbs.add(new EnemyOrb(0,0,50,Color.GREEN,2));
-           
+            case 0 -> {
+                enemyOrbs.add(new EnemyOrb(startX, startY, 50, Color.RED, 0));
+                enemyOrbs.add(new EnemyOrb(startX + spacing, startY, 50, Color.RED, 1));
+            }
+            case 1 -> {
+                enemyOrbs.add(new EnemyOrb(startX, startY, 50, Color.BLUE, 0));
+                enemyOrbs.add(new EnemyOrb(startX + spacing, startY, 50, Color.BLUE, 2));
+            }
+            case 2 -> {
+                enemyOrbs.add(new EnemyOrb(startX, startY, 50, Color.GREEN, 1));
+                enemyOrbs.add(new EnemyOrb(startX + spacing, startY, 50, Color.GREEN, 3));
+            }
         }
     }
 
@@ -173,26 +179,31 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             g2d.setColor(Color.getHSBColor(hue, 1f, 1f));
             g2d.setStroke(new BasicStroke(5));
             g2d.drawRect(arenaX, arenaY, arenaW, arenaH);
-			
-			//Player box
+
+            // Player box
             int playerX = arenaX + arenaW / 2 - playerBoxWidth / 2;
             int playerY = arenaY + arenaH + 10;
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(1));
             g2d.drawRect(playerX, playerY, playerBoxWidth, playerBoxHeight);
-			
-			//Triangle inside player box
-			int triSize = playerBoxWidth / 2 - 5;
-			AffineTransform old = g2d.getTransform();
-			g2d.translate(playerX + playerBoxWidth / 2, playerY + playerBoxHeight / 2);
-			g2d.rotate(Math.toRadians(orientation *90));
-			g2d.setColor(Color.RED);
-			g2d.fillPolygon(
-			new int[]{0, -triSize, -triSize},
-			new int[]{0, -triSize, triSize},
-			3
-		);
-			g2d.setTransform(old);
+
+            // Triangle inside player box
+            int triSize = playerBoxWidth / 2 - 5;
+            AffineTransform old = g2d.getTransform();
+            g2d.translate(playerX + playerBoxWidth / 2, playerY + playerBoxHeight / 2);
+            g2d.rotate(Math.toRadians(orientation * 90));
+            g2d.setColor(playerColor);
+            g2d.fillPolygon(
+                new int[]{0, -triSize, -triSize},
+                new int[]{0, -triSize, triSize},
+                3
+            );
+            g2d.setTransform(old);
+
+            // Draw enemies
+            for (EnemyOrb orb : enemyOrbs) {
+                orb.draw(g2d);
+            }
         }
     }
 
@@ -215,9 +226,15 @@ public class DoD_Prototype extends JPanel implements KeyListener {
                 case KeyEvent.VK_DOWN -> {
                     if (!enemyOrbs.isEmpty()) {
                         EnemyOrb first = enemyOrbs.get(0);
-                        if (first.orientation == orientation) {
+                        if (first.matchesPlayer(orientation, playerColor)) {
                             enemyOrbs.remove(0);
+
                             if (enemyOrbs.isEmpty()) {
+                                // Unlock next color in sequence
+                                if (playerColor.equals(Color.RED)) playerColor = Color.BLUE;
+                                else if (playerColor.equals(Color.BLUE)) playerColor = Color.GREEN;
+                                else if (playerColor.equals(Color.GREEN)) playerColor = Color.RED;
+
                                 level++;
                                 spawnLevel(level);
                             }
@@ -264,13 +281,5 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         BufferedImage image;
         String[] lines;
         StoryFrame(BufferedImage image, String... lines) { this.image = image; this.lines = lines; }
-    }
-
-    static class EnemyOrb {
-        int x, y, size, orientation;
-        Color color;
-        EnemyOrb(int x, int y, int size, Color color, int orientation) {
-            this.x = x; this.y = y; this.size = size; this.color = color; this.orientation = orientation;
-        }
     }
 }
