@@ -91,23 +91,31 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
     private void spawnLevel(int lvl) {
         enemyOrbs.clear();
-        int startX = 100;
-        int startY = 100;
-        int spacing = 80;
-
-        switch (lvl) {
-            case 0 -> {
-                enemyOrbs.add(new EnemyOrb(startX, startY, 50, Color.RED, 0));
-                enemyOrbs.add(new EnemyOrb(startX + spacing, startY, 50, Color.RED, 1));
-            }
-            case 1 -> {
-                enemyOrbs.add(new EnemyOrb(startX, startY, 50, Color.BLUE, 0));
-                enemyOrbs.add(new EnemyOrb(startX + spacing, startY, 50, Color.BLUE, 2));
-            }
-            case 2 -> {
-                enemyOrbs.add(new EnemyOrb(startX, startY, 50, Color.GREEN, 1));
-                enemyOrbs.add(new EnemyOrb(startX + spacing, startY, 50, Color.GREEN, 3));
-            }
+		
+		int numOrbs;
+		switch(lvl) {
+			case 0 -> numOrbs = 2;
+			case 1 -> numOrbs = 3;
+			case 2 -> numOrbs = 4;
+			default -> numOrbs = 3;
+		}
+		
+		int arenaW = getWidth() - 200;
+		int arenaX = (getWidth() - arenaW) / 2;
+		int centerY = (getHeight() - arenaHeight) / 2 + arenaHeight / 2;
+		
+		int spacing = arenaW / (numOrbs + 1);
+		
+		for (int i = 0; i < numOrbs; i++) {
+			int x = arenaX + spacing * (i + 1) -25;
+			int y = centerY - 25;
+			Color color = switch (lvl % 3){
+				case 0 -> Color.RED;
+				case 1 -> Color.BLUE;
+				default -> Color.GREEN;
+			};
+			int orientation = i % 4;
+			enemyOrbs.add(new EnemyOrb(x,y,50,color,orientation));
         }
     }
 
