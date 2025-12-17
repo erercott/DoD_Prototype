@@ -227,9 +227,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
                 case KeyEvent.VK_RIGHT -> orientation = (orientation + 1) % 4;
                 case KeyEvent.VK_LEFT -> orientation = (orientation + 3) % 4;
                 case KeyEvent.VK_UP -> {
-                    if (playerColor.equals(Color.RED) && level >= 1) playerColor = Color.BLUE;
-                    else if (playerColor.equals(Color.BLUE) && level >= 2) playerColor = Color.GREEN;
-                    else if (playerColor.equals(Color.GREEN)) playerColor = Color.RED;
+                    if (playerColor.equals(Color.RED)) playerColor = Color.GREEN;
+                    else if (playerColor.equals(Color.GREEN)) playerColor = Color.BLUE;
+                    else playerColor = Color.RED;
                 }
                 case KeyEvent.VK_DOWN -> {
                     if (!enemyOrbs.isEmpty()) {
