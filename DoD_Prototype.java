@@ -93,11 +93,21 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         enemyOrbs.clear();
 		
 		int numOrbs;
-		switch(lvl) {
-			case 0 -> numOrbs = 2;
-			case 1 -> numOrbs = 3;
-			case 2 -> numOrbs = 4;
-			default -> numOrbs = 3;
+		int fixedOrientation = 0;
+		switch(lvl) { 
+			case 0 -> { //red
+				numOrbs = 1;
+				fixedOrientation = 0;
+			}
+			case 1 -> { //blue
+				numOrbs = 3;
+			}
+			case 2 -> {//green
+				numOrbs = 4;
+			}
+			default -> {
+				numOrbs = 3;
+			}
 		}
 		
 		int arenaW = getWidth() - 200;
