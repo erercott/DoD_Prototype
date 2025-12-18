@@ -93,11 +93,11 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         enemyOrbs.clear();
 		
 		int numOrbs;
-		int fixedOrientation = 0;
+	
 		switch(lvl) { 
 			case 0 -> { //red
 				numOrbs = 1;
-				fixedOrientation = 0;
+				
 			}
 			case 1 -> { //blue
 				numOrbs = 3;
@@ -124,7 +124,12 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 				case 1 -> Color.BLUE;
 				default -> Color.GREEN;
 			};
-			int orientation = i % 4;
+			int orientation;
+			if (lvl == 0){
+				orientation = 0;
+			} else {
+				orientation = i % 4;
+			}
 			enemyOrbs.add(new EnemyOrb(x,y,50,color,orientation));
         }
     }
@@ -219,8 +224,10 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             g2d.setTransform(old);
 
             // Draw enemies
-            for (EnemyOrb orb : enemyOrbs) {
-                orb.draw(g2d);
+            for (int i = 0; i < enemyOrbs.size(); i++){
+				EnemyOrb orb = enemyOrbs.get(i);
+				boolean isActive = (i == 0);
+                orb.draw(g2d, isActive);
             }
         }
     }
@@ -236,11 +243,11 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_RIGHT -> orientation = (orientation + 1) % 4;
                 case KeyEvent.VK_LEFT -> orientation = (orientation + 3) % 4;
-                case KeyEvent.VK_UP -> {
+                /*case KeyEvent.VK_UP -> {
                     if (playerColor.equals(Color.RED)) playerColor = Color.GREEN;
                     else if (playerColor.equals(Color.GREEN)) playerColor = Color.BLUE;
                     else playerColor = Color.RED;
-                }
+                } */
                 case KeyEvent.VK_DOWN -> {
                     if (!enemyOrbs.isEmpty()) {
                         EnemyOrb first = enemyOrbs.get(0);

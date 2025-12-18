@@ -19,7 +19,7 @@ public class EnemyOrb {
 		return this.orientation == playerOrientation && this.triangleColor.equals(playerColor);
     }
 
-    public void draw(Graphics2D g2d) {
+    public void draw(Graphics2D g2d, boolean active) {
         // Outline circle
 		int cx = x + size / 2;
 		int cy = y + size / 2;
@@ -37,6 +37,12 @@ public class EnemyOrb {
 		g2d.fillPolygon(xPoints, yPoints, 3);
 		
 		g2d.setTransform(old);
+		
+		if (active) {
+			g2d.setColor(triangleColor);
+			g2d.setStroke(new BasicStroke(2));
+			g2d.drawOval(x - 6, y - 6, size + 12, size + 12);
+		}
     // Draw orb outline
     g2d.setColor(Color.BLACK);
     g2d.setStroke(new BasicStroke(3));
