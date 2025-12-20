@@ -250,8 +250,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
                 g2d.drawImage(finalBossImage, imgX, imgY, drawW, drawH, null);
 
                 // Draw boss orbs
-                int[][] eyeCoords = {{217, 165}, {213, 271}, {340, 206}, {473, 103}, {567, 231}, {645, 122}, {722, 298}};
-                for (int i = 0; i < finalOrbs.size(); i++) {
+			   int[][] eyeCoords = {{734, 127}, {424, 293}, {408, 152}, {600, 60}, {217, 240}, {599, 278}};
+					int count = Math.min(finalOrbs.size(), eyeCoords.length);
+					for(int i = 0; i < count; i++){
                     EnemyOrb orb = finalOrbs.get(i);
                     int screenX = imgX + (int) (eyeCoords[i][0] * ((double) drawW / imgW)) - orb.size / 2;
                     int screenY = imgY + (int) (eyeCoords[i][1] * ((double) drawH / imgH)) - orb.size / 2;
@@ -260,8 +261,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
             } else {
                 // Draw enemies
-                for (int i = 0; i < enemyOrbs.size(); i++) {
-                    EnemyOrb orb = enemyOrbs.get(i);
+                int count = enemyOrbs.size();
+				for (int i = 0; i < count; i++){
+					EnemyOrb orb = enemyOrbs.get(i);
                     boolean isActive = (i == 0);
                     orb.draw(g2d, isActive);
                 }
