@@ -121,8 +121,8 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             int y = centerY - 25;
             Color color = switch (lvl % 3) {
                 case 0 -> Color.RED;
-                case 1 -> Color.BLUE;
-                default -> Color.GREEN;
+                case 1 -> Color.GREEN;
+                default -> Color.BLUE;
             };
             int orientation = (lvl == 0) ? 0 : i % 4;
             enemyOrbs.add(new EnemyOrb(x, y, 50, color, orientation));
@@ -293,9 +293,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
                             if (activeOrbs.isEmpty()) {
                                 if (!inFinalLevel) {
                                     // Cycle color per level
-                                    if (playerColor.equals(Color.RED)) playerColor = Color.BLUE;
-                                    else if (playerColor.equals(Color.BLUE)) playerColor = Color.GREEN;
-                                    else if (playerColor.equals(Color.GREEN)) {
+                                    if (playerColor.equals(Color.RED)) playerColor = Color.GREEN;
+                                    else if (playerColor.equals(Color.GREEN)) playerColor = Color.BLUE;
+                                    else if (playerColor.equals(Color.BLUE)) {
                                         inFinalLevel = true;
                                         spawnFinalLevel();
                                     }
