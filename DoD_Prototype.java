@@ -38,6 +38,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private int level = 0;
     private ArrayList<EnemyOrb> enemyOrbs = new ArrayList<>();
 
+    // --- Orientation continuity across levels ---
+    private int lastOrientation = 0;
+
     // --- Final Boss ---
     private BufferedImage finalBossImage;
     private boolean inFinalLevel = false;
@@ -119,13 +122,19 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         for (int i = 0; i < numOrbs; i++) {
             int x = arenaX + spacing * (i + 1) - 25;
             int y = centerY - 25;
+
+            // Red → Green → Blue color sequence
             Color color = switch (lvl % 3) {
                 case 0 -> Color.RED;
                 case 1 -> Color.GREEN;
                 default -> Color.BLUE;
             };
-            int orientation = (lvl == 0) ? 0 : i % 4;
-            enemyOrbs.add(new EnemyOrb(x, y, 50, color, orientation));
+
+            // Orientation continues clockwise across levels
+            int orbOrientation = lastOrientation;
+            lastOrientation = (lastOrientation + 1) % 4;
+
+            enemyOrbs.add(new EnemyOrb(x, y, 50, color, orbOrientation));
         }
     }
 
@@ -250,9 +259,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
                 g2d.drawImage(finalBossImage, imgX, imgY, drawW, drawH, null);
 
                 // Draw boss orbs
-			   int[][] eyeCoords = {{734, 127}, {424, 293}, {408, 152}, {600, 60}, {217, 240}, {599, 278}};
-					int count = Math.min(finalOrbs.size(), eyeCoords.length);
-					for(int i = 0; i < count; i++){
+                int[][] eyeCoords = {{734, 127}, {424, 293}, {408, 152}, {600, 60}, {217, 240}, {599, 278}};
+                int count = Math.min(finalOrbs.size(), eyeCoords.length);
+                for (int i = 0; i < count; i++) {
                     EnemyOrb orb = finalOrbs.get(i);
                     int screenX = imgX + (int) (eyeCoords[i][0] * ((double) drawW / imgW)) - orb.size / 2;
                     int screenY = imgY + (int) (eyeCoords[i][1] * ((double) drawH / imgH)) - orb.size / 2;
@@ -262,8 +271,8 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             } else {
                 // Draw enemies
                 int count = enemyOrbs.size();
-				for (int i = 0; i < count; i++){
-					EnemyOrb orb = enemyOrbs.get(i);
+                for (int i = 0; i < count; i++) {
+                    EnemyOrb orb = enemyOrbs.get(i);
                     boolean isActive = (i == 0);
                     orb.draw(g2d, isActive);
                 }
