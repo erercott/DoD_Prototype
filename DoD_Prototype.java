@@ -45,8 +45,8 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private BufferedImage finalBossImage;
     private boolean inFinalLevel = false;
     private ArrayList<EnemyOrb> finalOrbs = new ArrayList<>();
-    private int bossOrientation = 0;
-    private Color bossColor = Color.RED;
+  
+
 
     public DoD_Prototype() {
         setFocusable(true);
@@ -106,19 +106,15 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         // --- Dynamic final boss orb Timer ---
         new Timer(900, e -> {
             if (!gameStarted || !inFinalLevel || finalOrbs.isEmpty()) return;
-
-            bossOrientation = (int) (Math.random() * 4);
-            int c = (int) (Math.random() * 3);
-            bossColor = switch (c) {
-                case 0 -> Color.RED;
+		for (EnemyOrb orb : finalOrbs) {
+			orb.orientation = (int) (Math.random() * 4);
+			int c = (int) (Math.random() * 3);
+			orb.triangleColor = switch (c) {
+				case 0 -> Color.RED;
                 case 1 -> Color.GREEN;
                 default -> Color.BLUE;
-            };
-
-            for (EnemyOrb orb : finalOrbs) {
-                orb.orientation = bossOrientation;
-                orb.triangleColor = bossColor;
-            }
+			};
+        }
             repaint();
         }).start();
     }
@@ -168,9 +164,16 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         for (int[] coord : eyeCoords) {
             int orbX = coord[0] - orbSize / 2;
             int orbY = coord[1] - orbSize / 2;
-            finalOrbs.add(new EnemyOrb(orbX, orbY, orbSize, bossColor, bossOrientation));
-        }
+           
+		   int orientation = (int) (Math.random() *4);
+		   Color color = switch ((int)(Math.random() * 3)){
+			case 0 -> Color.RED;
+			case 1 -> Color.GREEN;
+			default -> Color.BLUE;
+        };
+		finalOrbs.add(new EnemyOrb(orbX, orbY, orbSize, color, orientation));
     }
+}
 
     @Override
     protected void paintComponent(Graphics g) {
