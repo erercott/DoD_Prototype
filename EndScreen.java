@@ -33,7 +33,7 @@ public class EndScreen extends JPanel {
             reds[i] = new Color(r, 0, 0);
         }
 
-        // Timer for animation
+        // Timer for animation (set it up inside the constructor)
         new Timer(50, e -> {
             if (gameOver) {
                 frameIndex++;
@@ -41,7 +41,7 @@ public class EndScreen extends JPanel {
                 hueOffset += 0.05f;
                 if (hueOffset >= maxCycles) finished = true;
             }
-            repaint();
+            repaint();  // Repaint after updating animation state
         }).start();
     }
 
@@ -102,15 +102,5 @@ public class EndScreen extends JPanel {
                 g2d.drawString(text, x, y);
             }
         }
-    }
-
-    // Optional test main
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("End Screen Test");
-        EndScreen panel = new EndScreen(false); // false = Victory
-        frame.add(panel);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
     }
 }

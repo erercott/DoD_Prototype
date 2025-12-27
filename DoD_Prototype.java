@@ -10,10 +10,12 @@ import javax.imageio.ImageIO;
 import java.awt.geom.AffineTransform;
 
 public class DoD_Prototype extends JPanel implements KeyListener {
-	private Timer introTimer;
-	private Timer strobeTimer;
-	private Timer finalBossTimer;
-    // --- Intro ---
+
+    private Timer introTimer;
+    private Timer strobeTimer;
+    private Timer finalBossTimer;
+    private Timer endScreenTimer;
+
     private ArrayList<StoryFrame> introFrames = new ArrayList<>();
     private boolean inIntro = true;
     private int currentFrame = 0;
@@ -21,69 +23,55 @@ public class DoD_Prototype extends JPanel implements KeyListener {
     private long frameCompleteTime = 0;
     private final int lingerMillis = 7000;
 
-    // --- Menu ---
     private boolean inMenu = false;
     private int menuOrientation = 0;
     private Color menuColor = Color.RED;
 
-    // --- Gameplay ---
     private boolean gameStarted = false;
     private int strobeIndex = 0;
 
-    // --- Arena/Player ---
     private final int arenaHeight = 500;
     private final int playerBoxWidth = 50;
     private final int playerBoxHeight = 50;
-
     private int orientation = 0;
     private Color playerColor = Color.RED;
     private int level = 0;
     private ArrayList<EnemyOrb> enemyOrbs = new ArrayList<>();
-
-    // --- Orientation continuity across levels ---
     private int lastOrientation = 0;
 
-    // --- Final Boss ---
     private BufferedImage finalBossImage;
     private boolean inFinalLevel = false;
     private ArrayList<EnemyOrb> finalOrbs = new ArrayList<>();
-  
 
+    private EndScreen endScreen = null;
 
     public DoD_Prototype() {
         setFocusable(true);
         addKeyListener(this);
 
         try {
-            // Intro frames
             introFrames.add(new StoryFrame(ImageIO.read(new File("scene00.png")),
                     "Once upon a time, there lived a Kingdom inside of a computer...",
-                    "One day the computer was infected by an unknown virus."
-            ));
+                    "One day the computer was infected by an unknown virus."));
             introFrames.add(new StoryFrame(ImageIO.read(new File("scene01.png")),
                     "The ruler of the kingdom held its only defense against the plague",
                     "but in his old age could not use it to defend the kingdom.",
-                    "The king asks YOU! Could you bear the sacrifice of your own arm?"
-            ));
+                    "The king asks YOU! Could you bear the sacrifice of your own arm?"));
             introFrames.add(new StoryFrame(ImageIO.read(new File("scene02.png")),
-                    "This is the story of Random Access Memory"
-            ));
+                    "This is the story of Random Access Memory"));
 
-            // Final boss image
             finalBossImage = ImageIO.read(new File("finalBoss.png"));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // --- Intro typewriter effect ---
-        introTimer = new Timer(50, e ->{
+        introTimer = new Timer(50, e -> {
             if (inIntro && currentFrame < introFrames.size()) {
                 StoryFrame frame = introFrames.get(currentFrame);
                 int totalLetters = Arrays.stream(frame.lines).mapToInt(String::length).sum();
-                if (lettersShown < totalLetters) {
-                    lettersShown++;
-                } else {
+                if (lettersShown < totalLetters) lettersShown++;
+                else {
                     if (frameCompleteTime == 0) frameCompleteTime = System.currentTimeMillis();
                     if (System.currentTimeMillis() - frameCompleteTime >= lingerMillis) {
                         lettersShown = 0;
@@ -97,28 +85,29 @@ public class DoD_Prototype extends JPanel implements KeyListener {
                 }
                 repaint();
             }
-        }).start();
+        });
+        introTimer.start();
 
-        // --- Strobe animation ---
-        strobeTimer = new Timer (16, e ->{
+        strobeTimer = new Timer(16, e -> {
             if (gameStarted) strobeIndex++;
             repaint();
-        }).start();
+        });
+        strobeTimer.start();
 
-        // --- Dynamic final boss orb Timer ---
-		finalBossTimer = new Timer(900, e ->{
+        finalBossTimer = new Timer(900, e -> {
             if (!gameStarted || !inFinalLevel || finalOrbs.isEmpty()) return;
-		for (EnemyOrb orb : finalOrbs) {
-			orb.orientation = (int) (Math.random() * 4);
-			int c = (int) (Math.random() * 3);
-			orb.triangleColor = switch (c) {
-				case 0 -> Color.RED;
-                case 1 -> Color.GREEN;
-                default -> Color.BLUE;
-			};
-        }
+            for (EnemyOrb orb : finalOrbs) {
+                orb.orientation = (int) (Math.random() * 4);
+                int c = (int) (Math.random() * 3);
+                orb.triangleColor = switch (c) {
+                    case 0 -> Color.RED;
+                    case 1 -> Color.GREEN;
+                    default -> Color.BLUE;
+                };
+            }
             repaint();
-        }).start();
+        });
+        finalBossTimer.start();
     }
 
     private void spawnLevel(int lvl) {
@@ -166,16 +155,16 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         for (int[] coord : eyeCoords) {
             int orbX = coord[0] - orbSize / 2;
             int orbY = coord[1] - orbSize / 2;
-           
-		   int orientation = (int) (Math.random() *4);
-		   Color color = switch ((int)(Math.random() * 3)){
-			case 0 -> Color.RED;
-			case 1 -> Color.GREEN;
-			default -> Color.BLUE;
-        };
-		finalOrbs.add(new EnemyOrb(orbX, orbY, orbSize, color, orientation));
+
+            int orientation = (int) (Math.random() * 4);
+            Color color = switch ((int) (Math.random() * 3)) {
+                case 0 -> Color.RED;
+                case 1 -> Color.GREEN;
+                default -> Color.BLUE;
+            };
+            finalOrbs.add(new EnemyOrb(orbX, orbY, orbSize, color, orientation));
+        }
     }
-}
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -184,7 +173,13 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         g2d.setColor(Color.BLACK);
         g2d.fillRect(0, 0, getWidth(), getHeight());
 
-        // --- Intro ---
+        if (endScreen != null) {
+            stopAllTimers();
+            endScreen.setSize(getWidth(), getHeight());
+            endScreen.paintComponent(g2d);
+            return;
+        }
+
         if (inIntro && currentFrame < introFrames.size()) {
             StoryFrame frame = introFrames.get(currentFrame);
             int imgW = frame.image.getWidth();
@@ -215,7 +210,6 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             return;
         }
 
-        // --- Menu ---
         if (inMenu) {
             int triSize = Math.min(getWidth(), getHeight()) / 3;
             int centerX = getWidth() / 2;
@@ -231,7 +225,6 @@ public class DoD_Prototype extends JPanel implements KeyListener {
             return;
         }
 
-        // --- Gameplay & Final Boss ---
         if (gameStarted) {
             int arenaW = getWidth() - 200;
             int arenaH = arenaHeight;
@@ -286,6 +279,8 @@ public class DoD_Prototype extends JPanel implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (endScreen != null) return;
+
         if (inIntro && e.getKeyCode() == KeyEvent.VK_SPACE) {
             inIntro = false;
             inMenu = true;
@@ -299,25 +294,46 @@ public class DoD_Prototype extends JPanel implements KeyListener {
                 case KeyEvent.VK_LEFT -> orientation = (orientation + 3) % 4;
                 case KeyEvent.VK_DOWN -> {
                     ArrayList<EnemyOrb> activeOrbs = inFinalLevel ? finalOrbs : enemyOrbs;
-                    if (!activeOrbs.isEmpty()) {
-                        EnemyOrb first = activeOrbs.get(0);
-                        if (first.matchesPlayer(orientation, playerColor)) {
-                            activeOrbs.remove(0);
+
+                    EnemyOrb matchedOrb = null;
+                    for (EnemyOrb orb : activeOrbs) {
+                        if (orb.matchesPlayer(orientation, playerColor)) {
+                            matchedOrb = orb;
+                            break;
+                        }
+                    }
+
+                    if (matchedOrb != null) {
+                        final EnemyOrb orbToRemove = matchedOrb;
+                        orbToRemove.triangleColor = Color.WHITE;
+                        repaint();
+
+                        Timer flashTimer = new Timer(150, ev -> {
+                            activeOrbs.remove(orbToRemove);
+                            repaint();
                             if (activeOrbs.isEmpty()) {
                                 if (!inFinalLevel) {
+                                    level++;
                                     if (playerColor.equals(Color.RED)) playerColor = Color.GREEN;
                                     else if (playerColor.equals(Color.GREEN)) playerColor = Color.BLUE;
                                     else if (playerColor.equals(Color.BLUE)) {
                                         inFinalLevel = true;
                                         spawnFinalLevel();
                                     }
-                                    level++;
                                     spawnLevel(level);
                                 } else {
-                                    System.out.println("Final boss defeated!");
+                                    endScreen = new EndScreen(false);  // Victory here
+                                    stopAllTimers();
+
+                                    endScreenTimer = new Timer(50, evt2 -> {
+                                        repaint();
+                                    });
+                                    endScreenTimer.start();
                                 }
                             }
-                        }
+                        });
+                        flashTimer.setRepeats(false);
+                        flashTimer.start();
                     }
                 }
                 case KeyEvent.VK_UP -> {
@@ -370,9 +386,11 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         String[] lines;
         StoryFrame(BufferedImage image, String... lines) { this.image = image; this.lines = lines; }
     }
-	private void stopAllTimers(){
-		if (introTimer != null) introTimer.stop();
-		if (strobeTimer != null) strobeTimer.stop();
-		if (finalBossTimer != null) finalBossTimer.stop();
-	}
+
+    private void stopAllTimers(){
+        if (introTimer != null) introTimer.stop();
+        if (strobeTimer != null) strobeTimer.stop();
+        if (finalBossTimer != null) finalBossTimer.stop();
+        if (endScreenTimer != null) endScreenTimer.stop();
+    }
 }
