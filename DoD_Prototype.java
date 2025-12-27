@@ -10,7 +10,9 @@ import javax.imageio.ImageIO;
 import java.awt.geom.AffineTransform;
 
 public class DoD_Prototype extends JPanel implements KeyListener {
-
+	private Timer introTimer;
+	private Timer strobeTimer;
+	private Timer finalBossTimer;
     // --- Intro ---
     private ArrayList<StoryFrame> introFrames = new ArrayList<>();
     private boolean inIntro = true;
@@ -75,7 +77,7 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         }
 
         // --- Intro typewriter effect ---
-        new Timer(50, e -> {
+        introTimer = new Timer(50, e ->{
             if (inIntro && currentFrame < introFrames.size()) {
                 StoryFrame frame = introFrames.get(currentFrame);
                 int totalLetters = Arrays.stream(frame.lines).mapToInt(String::length).sum();
@@ -98,13 +100,13 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         }).start();
 
         // --- Strobe animation ---
-        new Timer(16, e -> {
+        strobeTimer = new Timer (16, e ->{
             if (gameStarted) strobeIndex++;
             repaint();
         }).start();
 
         // --- Dynamic final boss orb Timer ---
-        new Timer(900, e -> {
+		finalBossTimer = new Timer(900, e ->{
             if (!gameStarted || !inFinalLevel || finalOrbs.isEmpty()) return;
 		for (EnemyOrb orb : finalOrbs) {
 			orb.orientation = (int) (Math.random() * 4);
@@ -368,4 +370,9 @@ public class DoD_Prototype extends JPanel implements KeyListener {
         String[] lines;
         StoryFrame(BufferedImage image, String... lines) { this.image = image; this.lines = lines; }
     }
+	private void stopAllTimers(){
+		if (introTimer != null) introTimer.stop();
+		if (strobeTimer != null) strobeTimer.stop();
+		if (finalBossTimer != null) finalBossTimer.stop();
+	}
 }
